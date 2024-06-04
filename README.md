@@ -1,8 +1,7 @@
 Under construction...
 
-# MPC-portfolio
+# MPC portfolio
 Model Predictive Control based portfolio algorithm.
-
 
 # Software structure ideas list
 
@@ -16,3 +15,7 @@ Model Predictive Control based portfolio algorithm.
 5. Portfolio: Allocation of assets based on control algorithm
 
 UML class diagram on: 
+
+
+# Gradient ascent portfolio
+Reinforcement learning gradient ascent algorithm.
