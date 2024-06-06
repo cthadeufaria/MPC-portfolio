@@ -1,15 +1,16 @@
-from gradient_ascent.portfolio import Portfolio
+"""Class to create and update the gradient ascent mathematical model."""
 import numpy as np
 
 
 
 class Model:
-    def __init__(self):
-        pass
+    def __init__(self, market_data: object) -> None:
+        self.data = market_data
 
-    def gradient(self, x, theta, delta, positions, returns):
-        Ft = positions(x, theta)
-        R = returns(Ft, x, delta)
+
+    def gradient(self, x, theta, delta):
+        Ft = self.positions(x, theta)
+        R = self.returns(Ft, x, delta)
         T = len(x)
         M = len(theta) - 2
         
@@ -39,14 +40,20 @@ class Model:
 
 
     def train(self, x, epochs=2000, M=8, commission=0.0025, learning_rate = 0.3):
+        np.random.seed(0)
+
         theta = np.random.rand(M + 2)
         sharpes = np.zeros(epochs) # store sharpes over time
+        
+        print("Training model...")
+
         for i in range(epochs):
             grad, sharpe = self.gradient(x, theta, commission)
             theta = theta + grad * learning_rate
 
             sharpes[i] = sharpe
-        
+
+            print(f"Epoch {i} - Sharpe: {sharpe}")
         
         print("finished training")
         return theta, sharpes
@@ -55,16 +62,36 @@ class Model:
     def train_test_split(self, returns, test_size=0.2):
             x = np.array(returns)
 
-            N = len(x) * (1 - test_size)
-            P = 200 * test_size
+            N = int(
+                len(x) * (1 - test_size)
+            )
+            P = len(x) - N
+
             x_train = x[-(N+P):-P]
             x_test = x[-P:]
 
-            std = np.std(x_train)
-            mean = np.mean(x_train)
+            return self.normalize(x_train), self.normalize(x_test)
 
-            x_train = (x_train - mean) / std
-            x_test = (x_test - mean) / std
 
-            return x_train, x_test
+    def normalize(self, x):
+            std = np.std(x)
+            mean = np.mean(x)
+
+            return (x - mean) / std
+
+
+    def positions(self, x, theta):
+        M = len(theta) - 2
+        T = len(x)
+        Ft = np.zeros(T)
+        for t in range(M, T):
+            xt = np.concatenate([[1], x[t - M:t], [Ft[t - 1]]])
+            Ft[t] = np.tanh(np.dot(theta, xt))
+        return Ft
+
+
+    def returns(self, Ft, x, delta):
+        T = len(x)
+        rets = Ft[0:T - 1] * x[1:T] - delta * np.abs(Ft[1:T] - Ft[0:T - 1])
+        return np.concatenate([[0], rets])
 
